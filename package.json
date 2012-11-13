@@ -1,7 +1,7 @@
 {
     "name": "redis-row-stream"
   , "version": "0.0.1"
-  , "description": "Use regular expressions to parse a stream into JSON"
+  , "description": "stream items into a redis instance for storage"
   , "author": {
       "name":"John Goodall"
     , "email":"jgoodall@ornl.gov"
@@ -31,7 +31,8 @@
     }
   , "main": "./redis-row-stream.js"
   , "dependencies": {
-      "moment": ">=1.7.0"
+      "redis": "@0.7.2"
+      "reds": ">=0.2.2"
   }
   , "devDependencies": {
       "mocha": ">=1.3.0"
@@ -42,7 +43,7 @@
   }
   , "repository": {
       "type": "git"
-    , "url": "https://graphex.ornl.gov/git/ojg"
+    , "url": "https://github.com/ornl-situ/redis-row-stream.git"
   }
   , "keywords": ["redis", "stream"]
   , "engines": { "node": ">= 0.6.0 < 0.9.0" }
