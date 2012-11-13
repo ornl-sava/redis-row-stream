@@ -8,22 +8,21 @@
 
 var Stream = require('stream').Stream
   , util = require('util')
-  , moment = require('moment')
   , redis = require('redis')
   , reds = require('reds')
 
 var verbose = false //TODO meh.
 
-module.exports = RedisStream
+module.exports = RedisRowStream
 
-//RedisStream constructor available options: 
+//RedisRowStream constructor available options: 
 //  opts.keyPrefix      //all keys will be of the form keyPrefix:counter
 //  opts.index          //if true, will index all results with reds.  Note that this can slow output somewhat.  see https://github.com/visionmedia/reds
 //  opts.indexedFields  //if above is true, these fields will be indexed
 //  opts.serverAddress  //address of redis server
 //  opts.serverPort     //port of redis server
 //  opts.redisOpts      //see https://github.com/mranney/node_redis#rediscreateclientport-host-options for options.
-function RedisStream (opts) {
+function RedisRowStream (opts) {
   this.writable = true
   this.readable = true
 
@@ -34,9 +33,29 @@ function RedisStream (opts) {
   Stream.call(this)
   
   this.eventID = 0 //will be appended to end of all keys to guarantee unique.  Counts events.
-  this.keyPrefix = opts.keyPrefix
-  this.index = opts.index
-  this.indexedFields = opts.indexedFields
+
+
+  if (!opts)
+    opts = {}
+  if (!opts.serverPort)
+    opts.serverPort = 6379
+  if(!opts.serverAddress)
+    opts.serverAddress = "localhost"
+
+  if(opts.index)
+    this.index = true
+  else
+    this.index = false
+
+  if(opts.indexedFields)
+    this.indexedFields = opts.indexedFields
+  else
+    this.indexedFields = []
+
+  if(opts.keyPrefix)
+    this.keyPrefix = opts.keyPrefix
+  else
+    this.keyPrefix = "Default"
   var redisOpts = {}
   if(opts.redisOpts) redisOpts = opts.redisOpts
 
@@ -45,16 +64,16 @@ function RedisStream (opts) {
   return this
 }
 
-util.inherits(RedisStream, Stream)
+util.inherits(RedisRowStream, Stream)
 
 // assumes UTF-8
-RedisStream.prototype.write = function (record) {
+RedisRowStream.prototype.write = function (record) {
   // cannot write to a stream after it has ended
   if ( this._ended ) 
-    throw new Error('RedisStream: write after end')
+    throw new Error('RedisRowStream: write after end')
 
   if ( ! this.writable ) 
-    throw new Error('RedisStream: not a writable stream')
+    throw new Error('RedisRowStream: not a writable stream')
   
   if ( this._paused ) 
     return false
@@ -84,7 +103,7 @@ RedisStream.prototype.write = function (record) {
   return true  
 }
 
-RedisStream.prototype.end = function (str) {
+RedisRowStream.prototype.end = function (str) {
   if ( this._ended ) return
   
   if ( ! this.writable ) return
@@ -100,21 +119,21 @@ RedisStream.prototype.end = function (str) {
   this.emit('close')
 }
 
-RedisStream.prototype.pause = function () {
+RedisRowStream.prototype.pause = function () {
   if ( this._paused ) return
   
   this._paused = true
   this.emit('pause')
 }
 
-RedisStream.prototype.resume = function () {
+RedisRowStream.prototype.resume = function () {
   if ( this._paused ) {
     this._paused = false
     this.emit('drain')
   }
 }
 
-RedisStream.prototype.destroy = function () {
+RedisRowStream.prototype.destroy = function () {
   if ( this._destroyed ) return
   
   this._destroyed = true
@@ -127,7 +146,7 @@ RedisStream.prototype.destroy = function () {
   this.emit('close')
 }
 
-RedisStream.prototype.flush = function () {
+RedisRowStream.prototype.flush = function () {
   this.emit('flush')
 }
 
