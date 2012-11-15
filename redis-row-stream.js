@@ -93,7 +93,8 @@ RedisRowStream.prototype.write = function (record) {
     for(var i=0; i< this.indexedFields.length; i++){
       //search.index('blah something coffee', key);
       field = this.indexedFields[i]
-      search.index(record[field], key);
+      if(field && field !== "")
+        search.index(record[field], key);
     }
     //search.index('Foo bar baz', 'abc');
   }

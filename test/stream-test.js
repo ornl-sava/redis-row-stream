@@ -47,8 +47,6 @@ describe('redis row stream Tests', function() {
 
 }) 
 
-//TODO - test invalid code, blank lines at end, etc.
-
 var pauseUnpauseStream = function (done) {
   var opts = { channel:"pauseUnpauseStreamTest"      //name of the channel to publish messages
       , serverAddress: "localhost"  //address of redis server
@@ -60,13 +58,13 @@ var pauseUnpauseStream = function (done) {
     .pipe(tester.createPauseStream())  
   setTimeout(function(){
     done()
-  }, 500) //need some time here so that pipelines can empty and whatnot before moving on to other tests
+  }, 1500) //need some time here so that pipelines can empty and whatnot before moving on to other tests
 }
 
 var simpleRowTest = function (done) {
   // define the test data and output file
   var inFile = path.join('test', 'input', 'simpleData.json')
-    , opts = { keyPrefix:"simpleRowTest"      //name of the channel to publish messages
+    , opts = { keyPrefix:"simpleRowTest"      //prefix to attach to all keys
       , index:false  //if true, will index all results with reds.  Note that this can slow output somewhat.  see https://github.com/visionmedia/reds
       , indexedFields:[] //if above is true, these fields will be indexed
       , serverAddress: "localhost"  //address of redis server
@@ -101,7 +99,7 @@ var simpleRowTest = function (done) {
             })
           })
         }
-        setTimeout(check, 500) //need some time here so that pipelines can empty and whatnot 
+        setTimeout(check, 1500) //need some time here so that pipelines can empty and whatnot 
 
       })
     })
