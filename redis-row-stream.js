@@ -2,6 +2,9 @@
   Node.js module to persist a stream of items to Redis
 */
 
+/*jshint node:true, indent:2, globalstrict: true, asi: true, laxcomma: true, laxbreak: true */
+/*global module:true, require:true, console:true */
+
 'use strict';
 
 var Stream = require('stream').Stream
@@ -20,7 +23,7 @@ module.exports = RedisRowStream
 //  opts.serverAddress  //address of redis server
 //  opts.serverPort     //port of redis server
 //  opts.redisOpts      //see https://github.com/mranney/node_redis#rediscreateclientport-host-options for options.
-function RedisRowStream (opts) {
+function RedisRowStream(opts) {
   this.writable = true
   this.readable = true
 
@@ -37,25 +40,26 @@ function RedisRowStream (opts) {
     opts = {}
   if (!opts.serverPort)
     opts.serverPort = 6379
-  if(!opts.serverAddress)
+  if (!opts.serverAddress)
     opts.serverAddress = "localhost"
 
-  if(opts.index)
+  if (opts.index)
     this.index = true
   else
     this.index = false
 
-  if(opts.indexedFields)
+  if (opts.indexedFields)
     this.indexedFields = opts.indexedFields
   else
     this.indexedFields = []
 
-  if(opts.keyPrefix)
+  if (opts.keyPrefix)
     this.keyPrefix = opts.keyPrefix
   else
     this.keyPrefix = "Default"
+    
   var redisOpts = {}
-  if(opts.redisOpts) redisOpts = opts.redisOpts
+  if (opts.redisOpts) redisOpts = opts.redisOpts
 
   this.redisClient = redis.createClient(opts.serverPort, opts.serverAddress, redisOpts)
 
@@ -75,31 +79,31 @@ util.inherits(RedisRowStream, Stream)
  */
 RedisRowStream.prototype.write = function (record) {
   // cannot write to a stream after it has ended
-  if ( this._ended ) 
+  if (this._ended) 
     throw new Error('RedisRowStream: write after end')
 
-  if ( ! this.writable ) 
+  if (! this.writable)
     throw new Error('RedisRowStream: not a writable stream')
   
-  if ( this._paused ) 
+  if (this._paused)
     return false
 
   var key = this.keyPrefix + ':' + this.eventID
 
-  if(verbose){ 
+  if (verbose)
     console.log('sending to redis: key: ' + key + ', val: ' + util.inspect(record))
-  }
+  
   //TODO callback need to do anything?
-  this.redisClient.set(key, JSON.stringify(record), function (err, res){  }) //TODO
+  this.redisClient.set(key, JSON.stringify(record), function (err, res) {  }) //TODO
 
   //console.log('index flag set ' + this.index + ', indexedFields: ' + util.inspect(this.indexedFields))
-  if(this.index){
+  if (this.index) {
     var search = reds.createSearch('search');
     var field = ""
-    for(var i=0; i< this.indexedFields.length; i++){
+    for (var i = 0; i < this.indexedFields.length; i++) {
       //search.index('blah something coffee', key);
       field = this.indexedFields[i]
-      if(field && field !== "")
+      if (field && field !== "")
         search.index(record[field], key);
     }
     //search.index('Foo bar baz', 'abc');
@@ -118,11 +122,11 @@ RedisRowStream.prototype.write = function (record) {
  *
  */
 RedisRowStream.prototype.end = function (str) {
-  if ( this._ended ) return
+  if (this._ended) return
   
-  if ( ! this.writable ) return
+  if (! this.writable) return
   
-  if ( arguments.length )
+  if (arguments.length)
     this.write(str)
   
   this._ended = true
@@ -139,7 +143,7 @@ RedisRowStream.prototype.end = function (str) {
  *
  */
 RedisRowStream.prototype.pause = function () {
-  if ( this._paused ) return
+  if (this._paused) return
   
   this._paused = true
   this.emit('pause')
@@ -151,7 +155,7 @@ RedisRowStream.prototype.pause = function () {
  *
  */
 RedisRowStream.prototype.resume = function () {
-  if ( this._paused ) {
+  if (this._paused) {
     this._paused = false
     this.emit('drain')
   }
@@ -163,7 +167,7 @@ RedisRowStream.prototype.resume = function () {
  *
  */
 RedisRowStream.prototype.destroy = function () {
-  if ( this._destroyed ) return
+  if (this._destroyed) return
   
   this._destroyed = true
   this._ended = true
