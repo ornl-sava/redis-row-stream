@@ -43,15 +43,8 @@ function RedisRowStream(opts) {
   if (! opts.serverAddress)
     opts.serverAddress = "localhost"
 
-  if (opts.index)
-    this.index = true
-  else
-    this.index = false
-
-  if (opts.indexedFields)
-    this.indexedFields = opts.indexedFields
-  else
-    this.indexedFields = []
+  this.index = opts.index ? true : false
+  this.indexedFields = opts.indexedFields || []
 
   if (opts.keyPrefix)
     this.keyPrefix = opts.keyPrefix
@@ -91,10 +84,12 @@ RedisRowStream.prototype.write = function (record) {
   var key = this.keyPrefix + ':' + this.eventID
 
   if (verbose)
-    console.log('sending to redis: key: ' + key + ', val: ' + util.inspect(record))
+    console.log('redis> HMSET key ' + key + ' ' + util.inspect(record))
   
   //TODO callback need to do anything?
   this.redisClient.set(key, JSON.stringify(record), function (err, res) {  }) //TODO
+
+//  this.redisClient.hmset(key, record, function (err, res) {  }) //TODO
 
   //console.log('index flag set ' + this.index + ', indexedFields: ' + util.inspect(this.indexedFields))
   if (this.index) {
