@@ -98,15 +98,15 @@ RedisRowStream.prototype.write = function (record) {
 
   //console.log('index flag set ' + this.index + ', indexedFields: ' + util.inspect(this.indexedFields))
   if (this.index) {
-    var search = reds.createSearch('search');
+    var search = reds.createSearch('search')
     var field = ""
     for (var i = 0; i < this.indexedFields.length; i++) {
-      //search.index('blah something coffee', key);
+      //search.index('blah something coffee', key)
       field = this.indexedFields[i]
       if (field && field !== "")
-        search.index(record[field], key);
+        search.index(record[field], key)
     }
-    //search.index('Foo bar baz', 'abc');
+    //search.index('Foo bar baz', 'abc')
   }
 
   this.eventID += 1
