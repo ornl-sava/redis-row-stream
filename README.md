@@ -3,7 +3,7 @@
 
 # Send a stream of items to Redis
 
-This module will take in objects or strings as a [stream](http://nodejs.org/docs/latest/api/stream.html), and send it to redis for storage, with a key of some specified prefix, followed by some index, such as "prefix:0".
+This module will take in objects or strings as a [stream](http://nodejs.org/docs/latest/api/stream.html), and send it to [Redis](http://redis.io/) for storage, with a key of some specified prefix, followed by some index, such as "prefix:0".
 
 ## Install
 
@@ -11,18 +11,20 @@ npm install redis-row-stream
 
 ## Configuration
 
-The RedisPubsubStream constructor should be passed an opts object as its argument, similar to the following:
+The RedisRowStream constructor should be passed an opts object as its argument, similar to the following:
 
-    var opts = { keyPrefix:"simpleRowTest"
+    var opts = { 
+          keyPrefix:"simpleRowTest"
         , index:false
         , indexedFields:[]
         , serverAddress: "localhost" 
         , serverPort:6379 
-        , redisOpts: {} }
+        , redisOpts: {} 
+      }
 
 `keyPrefix` is the prefix to use for all keys.  It will be followed by some index, as mentioned above, so in this case keys would be "simpleRowTest:0", "simpleRowTest:1", etc.
 
-`index` is a boolean flag that indicates if any fields should be indexed (using [reds](https://github.com/visionmedia/reds) currently).  If set true, then the fields listed in `indexedFields` will be indexed in this way.  (Note that adding fields to the index will somewhat slow performance.)
+`index` is a boolean flag that indicates if any fields should be indexed (using [reds](https://github.com/visionmedia/reds)).  If set true, then the fields listed in `indexedFields` will be indexed in this way.  (Note that adding fields to the index will somewhat slow performance.)
 
 `serverAddress` is the address of Redis server, and `port` is the port on which the Redis server is listening.
 
@@ -30,36 +32,38 @@ The `redisOpts` field contains any options to pass to the Redis constructor, whi
 
 ## Usage
 
-For each incoming message, this module will output a corresponding pubsub message, on the specified channel, sent to the specified Redis instance.
+For each incoming message, this module will persist the data to the specified Redis instance.
 
-This example (based on one of the test cases) reads in a json file with an array of items, parses them, and sends each items to the pubsub stream. 
+This example (based on one of the test cases) reads in a json file with an array of items, parses them, and sends each items to Redis.
 
-    var RedisRowStream = require('../redis-row-stream.js')
+    var RedisRowStream = require('redis-row-stream')
       , fs = require('fs')
       , path = require('path')
 
     var inFile = path.join('test', 'input', 'simpleData.json')
-      , opts = { keyPrefix:"simpleRowTest"
+      , opts = { 
+          keyPrefix:"simpleRowTest"
         , index:false
         , indexedFields:[]
         , serverAddress: "localhost" 
         , serverPort:6379 
-        , redisOpts: {} }
+        , redisOpts: {} 
+      }
 
-    var testStream = new RedisRowStream(opts)
+    var redisStream = new RedisRowStream(opts)
 
     fs.readFile(inFile, function (err, data) {
       if (err) throw err
       data = JSON.parse(data)
       for(var i=0; i<data.length; i++){
-        testStream.write(data[i]);
+        redisStream.write(data[i]);
       }
     })
 
 Rather than sending items with .write(), a more typical example may simply pipe several streams together, for example:
 
-    var util = require('util')
-      , RedisRowStream = require('regex-stream')
+    var RedisRowStream = require('redis-row-stream')
+      , RegexStream = require('regex-stream')
 
     var input = require('fs').createReadStream('./data.txt', {encoding:'utf-8'})
       , parser = {
@@ -76,13 +80,13 @@ Rather than sending items with .write(), a more typical example may simply pipe 
         , serverPort:6379 
         , redisOpts: {} }
 
-    var testStream = new RedisRowStream(opts)
+    var redisStream = new RedisRowStream(opts)
 
     // pipe data from input file to the regexStream parser to redis pubsub
     input.pipe(regexStream)
-    regexStream.pipe(testStream)
+    regexStream.pipe(redisStream)
 
-This example will create a file stream, use the [regexStream](https://github.com/ornl-situ/regex-stream) instance to parse its items, and then pipe that output into the RedisPubsubStream instance.
+This example will create a file stream, use the [regexStream](https://github.com/ornl-situ/regex-stream) instance to parse its items, and then pipe that output into Redis.
 
 See the test cases for some usage examples.
 
