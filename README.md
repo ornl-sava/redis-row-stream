@@ -14,19 +14,22 @@ npm install redis-row-stream
 The RedisRowStream constructor should be passed an opts object as its argument, similar to the following:
 
     var opts = { 
-          keyPrefix:"simpleRowTest"
-        , index:false
-        , indexedFields:[]
+          keyPrefix: "simpleRowTest"
+        , structure: "hash"
+        , index: false
+        , indexedFields: []
         , serverAddress: "localhost" 
-        , serverPort:6379 
+        , serverPort: 6379 
         , redisOpts: {} 
       }
 
-`keyPrefix` is the prefix to use for all keys.  It will be followed by some index, as mentioned above, so in this case keys would be "simpleRowTest:0", "simpleRowTest:1", etc.
+`keyPrefix` is the prefix to use for all keys.  It will be followed by some index, as mentioned above, so in this case keys would be "simpleRowTest:0", "simpleRowTest:1", etc. If `keyPrefix` is left undefined, `'default'` will be used
 
-`index` is a boolean flag that indicates if any fields should be indexed (using [reds](https://github.com/visionmedia/reds)).  If set true, then the fields listed in `indexedFields` will be indexed in this way.  (Note that adding fields to the index will somewhat slow performance.)
+`structure` is the [Redis data type](http://redis.io/topics/data-types) to use. Valid options are `'string'` or `'hash'`. If `structure` is left undefined, `'string'` will be used.
 
-`serverAddress` is the address of Redis server, and `port` is the port on which the Redis server is listening.
+`index` is an optional boolean flag that indicates if any fields should be indexed (using [reds](https://github.com/visionmedia/reds)). The search namespace, used when creating the reds search is simply `search`. If `index` is set true, then all the fields listed in `indexedFields` will be indexed in this way. Note that adding fields to the index will somewhat slow performance.
+
+`serverAddress` is the address of Redis server (defaults to `'localhost'`), and `serverPort` is the port on which the Redis server is listening (defaults to `'6379'`).
 
 The `redisOpts` field contains any options to pass to the Redis constructor, which are listed in the [documentation for the node_redis module](https://github.com/mranney/node_redis#rediscreateclientport-host-options)
 

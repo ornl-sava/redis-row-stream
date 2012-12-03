@@ -64,12 +64,14 @@ var pauseUnpauseStream = function (done) {
 var simpleRowTest = function (done) {
   // define the test data and output file
   var inFile = path.join('test', 'input', 'simpleData.json')
-    , opts = { keyPrefix:"simpleRowTest"      //prefix to attach to all keys
+    , opts = { 
+        keyPrefix:"simpleRowTest"      //prefix to attach to all keys
       , index:false  //if true, will index all results with reds.  Note that this can slow output somewhat.  see https://github.com/visionmedia/reds
       , indexedFields:[] //if above is true, these fields will be indexed
       , serverAddress: "localhost"  //address of redis server
       , serverPort:6379     //port of redis server
-      , redisOpts: {} }
+      , redisOpts: {} 
+      }
     , result = []
 
 

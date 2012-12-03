@@ -12,11 +12,10 @@ var Stream = require('stream').Stream
   , redis = require('redis')
   , reds = require('reds')
 
-var verbose = false //TODO meh.
-
 module.exports = RedisRowStream
 
 //RedisRowStream constructor available options: 
+//  opts.structure      //redis data structure: either 'string' or 'hash'
 //  opts.keyPrefix      //all keys will be of the form keyPrefix:counter
 //  opts.index          //if true, will index all results with reds.  Note that this can slow output somewhat.  see https://github.com/visionmedia/reds
 //  opts.indexedFields  //if above is true, these fields will be indexed
@@ -38,21 +37,30 @@ function RedisRowStream(opts) {
 
   if (! opts)
     opts = {}
+    
+  // redis address
   if (! opts.serverPort)
     opts.serverPort = 6379
   if (! opts.serverAddress)
     opts.serverAddress = "localhost"
 
+  // show what is going on in the console
+  this.verbose = opts.verbose || false
+  
+  // use [reds](https://github.com/visionmedia/reds) to index data
   this.index = opts.index ? true : false
+
+  // fields to index, if any
   this.indexedFields = opts.indexedFields || []
 
-  if (opts.keyPrefix)
-    this.keyPrefix = opts.keyPrefix
-  else
-    this.keyPrefix = "Default"
+  // data structure to store the data in: either 'string' (default) or 'hash'
+  this.structure = opts.structure || "string"
+
+  // the string to prefix each key (key format: keyPrefix:counter)
+  this.keyPrefix = opts.keyPrefix || "Default"
     
-  var redisOpts = {}
-  if (opts.redisOpts) redisOpts = opts.redisOpts
+  // redis specific options, passed to [node-redis](https://github.com/mranney/node_redis)
+  var redisOpts = opts.redisOpts || {}
 
   this.redisClient = redis.createClient(opts.serverPort, opts.serverAddress, redisOpts)
 
@@ -83,25 +91,27 @@ RedisRowStream.prototype.write = function (record) {
 
   var key = this.keyPrefix + ':' + this.eventID
 
-  if (verbose)
+  if (this.verbose)
     console.log('redis> HMSET key ' + key + ' ' + util.inspect(record))
   
   //TODO callback need to do anything?
-  this.redisClient.set(key, JSON.stringify(record), function (err, res) {  }) //TODO
-
-//  this.redisClient.hmset(key, record, function (err, res) {  }) //TODO
+  if (this.structure === 'string')
+    this.redisClient.set(key, JSON.stringify(record), function (err, res) {  })
+  else if (this.structure === 'hash')
+    this.redisClient.hmset(key, record, function (err, res) {  })
 
   //console.log('index flag set ' + this.index + ', indexedFields: ' + util.inspect(this.indexedFields))
   if (this.index) {
     var search = reds.createSearch('search')
     var field = ""
     for (var i = 0; i < this.indexedFields.length; i++) {
-      //search.index('blah something coffee', key)
       field = this.indexedFields[i]
-      if (field && field !== "")
+      if (field && field !== "") {
+        if (this.verbose)
+          console.log('index> \'' + record[field] + '\' => ' + key)
         search.index(record[field], key)
+      }
     }
-    //search.index('Foo bar baz', 'abc')
   }
 
   this.eventID += 1
