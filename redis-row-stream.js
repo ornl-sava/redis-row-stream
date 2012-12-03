@@ -36,11 +36,11 @@ function RedisRowStream(opts) {
   this.eventID = 0 //will be appended to end of all keys to guarantee unique.  Counts events.
 
 
-  if (!opts)
+  if (! opts)
     opts = {}
-  if (!opts.serverPort)
+  if (! opts.serverPort)
     opts.serverPort = 6379
-  if (!opts.serverAddress)
+  if (! opts.serverAddress)
     opts.serverAddress = "localhost"
 
   if (opts.index)
