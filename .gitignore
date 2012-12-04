@@ -4,6 +4,9 @@
 ehthumbs.db
 Icon?
 Thumbs.db
+# Node #
+########
+npm-debug.log
 # Redis #
 ##############
 dump.rdb
