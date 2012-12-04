@@ -5,30 +5,20 @@ var RedisRowStream = require('../redis-row-stream.js')
   , tester = require('stream-tester')
   , should = require('should')
   , redis = require('redis')
+  , stringPrefix = 'stringRowTest'
+  , hashPrefix = 'hashRowTest'
 
 describe('redis row stream Tests', function() {
 
+  // clear redis
   before(function(done) {
-    var outPath = path.join('test', 'output')
-    fs.exists(outPath, function(exists) {
-      if (exists) {
-        fs.readdir(outPath, function(err, files) {
-          if ( files && files.length ) {
-            for (var i = 0 ; i < files.length ; i++ ) {
-              fs.unlink( path.join(outPath, files[i]), function(err) {
-                if ( err )
-                  throw err
-              }) 
-            }
-          }
-          done()
+    var rc = redis.createClient(6379, 'localhost')
+    rc.on('ready', function () {
+      rc.del(stringPrefix + ':0', stringPrefix + ':1', stringPrefix + ':2', function (err) { 
+        rc.del(hashPrefix + ':0', hashPrefix + ':1', hashPrefix + ':2', function (err) { 
+          if (!err) done()
         })
-      }
-      else {
-        fs.mkdir(outPath, 755, function(err) {
-          done()
-        })
-      }
+      })
     })
   })
 
@@ -63,13 +53,9 @@ var pauseUnpauseStream = function (done) {
 }
 
 var stringRowTest = function (done) {
-  // define the test data and output file
   var inFile = path.join('test', 'input', 'simpleData.json')
     , opts = { 
-        keyPrefix: "stringRowTest"      //prefix to attach to all keys
-      , serverAddress: "localhost"  //address of redis server
-      , serverPort: 6379     //port of redis server
-      , redisOpts: {} 
+        keyPrefix: stringPrefix   //prefix to attach to all keys
       }
     , result = []
     , expected = "{\"A label\":\"56\",\"B label\":\"78\",\"C label\":\"90\"}"
@@ -79,43 +65,35 @@ var stringRowTest = function (done) {
   var testStream = new RedisRowStream(opts)
 
   rc.on('ready', function(){
-    rc.flushall( function (err) { 
+    fs.readFile(inFile, function (err, data) {
       should.not.exist(err)
-      fs.readFile(inFile, function (err, data) {
-        should.not.exist(err)
-        data = JSON.parse(data)
-        for (var i=0; i<data.length; i++)
-          testStream.write(data[i])
+      data = JSON.parse(data)
+      for (var i=0; i<data.length; i++)
+        testStream.write(data[i])
 
-        var check = function(){
-          rc.keys(opts.keyPrefix+":*", function (err, replies) {
+      var check = function(){
+        rc.keys(opts.keyPrefix+":*", function (err, replies) {
+          should.not.exist(err)
+          replies.length.should.eql(3)
+          rc.get(opts.keyPrefix+":2", function(err, reply){
             should.not.exist(err)
-            replies.length.should.eql(3)
-            rc.get(opts.keyPrefix+":2", function(err, reply){
-              should.not.exist(err)
-              reply.should.eql(expected)
-              done()
-            })
+            reply.should.eql(expected)
+            done()
           })
-        }
-        setTimeout(check, 500) //need some time here so that pipelines can empty and whatnot 
-
-      })
+        })
+      }
+      setTimeout(check, 500) //need some time here so that pipelines can empty
     })
   })
  
 }
 
 var hashRowTest = function (done) {
-  // define the test data and output file
   var inFile = path.join('test', 'input', 'simpleData.json')
     , opts = { 
-        keyPrefix: "hashRowTest"    // prefix to attach to all keys
+        keyPrefix: hashPrefix       // prefix to attach to all keys
       , structure: "hash"           // save into hash data type
-      , serverAddress: "localhost"  // address of redis server
-      , serverPort: 6379            // port of redis server
-      , redisOpts: {} 
-      }
+    }
     , result = []
     , expected = {"A label":"56","B label":"78","C label":"90"}
 
@@ -124,28 +102,24 @@ var hashRowTest = function (done) {
   var testStream = new RedisRowStream(opts)
 
   rc.on('ready', function(){
-    rc.flushall( function (err) { 
+    fs.readFile(inFile, function (err, data) {
       should.not.exist(err)
-      fs.readFile(inFile, function (err, data) {
-        should.not.exist(err)
-        data = JSON.parse(data)
-        for (var i=0; i<data.length; i++)
-          testStream.write(data[i])
+      data = JSON.parse(data)
+      for (var i=0; i<data.length; i++)
+        testStream.write(data[i])
 
-        var check = function(){
-          rc.keys(opts.keyPrefix+":*", function (err, replies) {
+      var check = function(){
+        rc.keys(opts.keyPrefix+":*", function (err, replies) {
+          should.not.exist(err)
+          replies.length.should.eql(3)
+          rc.hgetall(opts.keyPrefix+":2", function(err, reply){
             should.not.exist(err)
-            replies.length.should.eql(3)
-            rc.hgetall(opts.keyPrefix+":2", function(err, reply){
-              should.not.exist(err)
-              reply.should.eql(expected)
-              done()
-            })
+            reply.should.eql(expected)
+            done()
           })
-        }
-        setTimeout(check, 500) //need some time here so that pipelines can empty and whatnot 
-
-      })
+        })
+      }
+      setTimeout(check, 500) //need some time here so that pipelines can empty
     })
   })
  
