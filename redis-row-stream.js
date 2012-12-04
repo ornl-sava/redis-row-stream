@@ -28,8 +28,6 @@ function RedisRowStream(opts) {
 
   this._paused = this._ended = this._destroyed = false
 
-  this._buffer = ''
-
   Stream.call(this)
   
   this.eventID = 0 //will be appended to end of all keys to guarantee unique.  Counts events.
@@ -39,16 +37,14 @@ function RedisRowStream(opts) {
     opts = {}
     
   // redis address
-  if (! opts.serverPort)
-    opts.serverPort = 6379
-  if (! opts.serverAddress)
-    opts.serverAddress = "localhost"
+  this.serverAddress = opts.serverAddress || "localhost"
+  this.serverPort = opts.serverPort || 6379
 
   // show what is going on in the console
   this.verbose = opts.verbose || false
   
   // use [reds](https://github.com/visionmedia/reds) to index data
-  this.index = opts.index ? true : false
+  this.index = opts.index || false
 
   // fields to index, if any
   this.indexedFields = opts.indexedFields || []
@@ -60,9 +56,9 @@ function RedisRowStream(opts) {
   this.keyPrefix = opts.keyPrefix || "Default"
     
   // redis specific options, passed to [node-redis](https://github.com/mranney/node_redis)
-  var redisOpts = opts.redisOpts || {}
+  this.redisOpts = opts.redisOpts || {}
 
-  this.redisClient = redis.createClient(opts.serverPort, opts.serverAddress, redisOpts)
+  this.redisClient = redis.createClient(this.serverPort, this.serverAddress, this.redisOpts)
 
   return this
 }
@@ -137,7 +133,9 @@ RedisRowStream.prototype.end = function (str) {
   this._ended = true
   this.readable = false
   this.writable = false
-
+  
+  this.redisClient.quit()
+  
   this.emit('end')
   this.emit('close')
 }
