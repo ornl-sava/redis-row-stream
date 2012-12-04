@@ -1,6 +1,6 @@
 {
     "name": "redis-row-stream"
-  , "version": "0.0.1"
+  , "version": "0.0.2"
   , "description": "stream items into a redis instance for storage"
   , "author": {
       "name":"John Goodall"
@@ -16,30 +16,30 @@
       , "email": "iannaconemd@ornl.gov"
       }
     ]
-  , "dist-tags": { "latest": "0.0.1" }
+  , "dist-tags": { "latest": "0.0.2" }
   , "versions":
-    [ "0.0.1"
+    [ 
+      "0.0.1"
+    , "0.0.2"
     ]
   , "time":
-    { "0.0.1": "2012-07-25T15:00:00.000Z"
+    { 
+      "0.0.1": "2012-11-30T15:00:00.000Z"
+    , "0.0.2": "2012-12-03T21:00:00.000Z"
     }
-  , "private": true
   , "scripts" : {
-      "test": "./node_modules/mocha/bin/mocha -R spec"
-    , "watch": "./node_modules/mocha/bin/mocha -R min --watch"
-    , "docs": "./node_modules/dox-foundation/bin/dox-foundation > doc/api.html < redis-row-stream.js ; ./node_modules/mocha/bin/mocha -R markdown > doc/tests.md"
-    }
+      "test": "./node_modules/mocha/bin/mocha -R spec --slow 500 --timeout 2500"
+    , "watch": "./node_modules/mocha/bin/mocha -R min --slow 500 --timeout 2500 --watch"
+  }
   , "main": "./redis-row-stream.js"
   , "dependencies": {
       "redis": "=0.7.2"
-  ,   "reds": ">=0.2.2"
   }
   , "devDependencies": {
       "mocha": ">=1.3.0"
     , "should": ">=1.0.0"
     , "stream-spec": ">=0.3"
     , "stream-tester": ">=0.0.2"
-    , "dox-foundation":  ">0.3"
   }
   , "repository": {
       "type": "git"

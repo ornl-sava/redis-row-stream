@@ -5,7 +5,6 @@ var RedisRowStream = require('../redis-row-stream.js')
   , tester = require('stream-tester')
   , should = require('should')
   , redis = require('redis')
-  , reds = require('reds')
 
 describe('redis row stream Tests', function() {
 
@@ -39,41 +38,41 @@ describe('redis row stream Tests', function() {
     })
   })
 
-  describe('# simple data pipe test', function(){
-    it('should pass simple objects to redis using specified keys', function(done){
-      simpleRowTest(done)
+  describe('# string type pipe test', function(){
+    it('should pass simple strings to redis strings data type', function(done){
+      stringRowTest(done)
+    })
+  })
+
+  describe('# hash type pipe test', function(){
+    it('should pass simple objects to redis hash data type', function(done){
+      hashRowTest(done)
     })
   })
 
 }) 
 
 var pauseUnpauseStream = function (done) {
-  var opts = { channel:"pauseUnpauseStreamTest"      //name of the channel to publish messages
-      , serverAddress: "localhost"  //address of redis server
-      , serverPort:6379     //port of redis server
-      , redisOpts: {} }
   tester.createRandomStream(10000) //10k random numbers
     .pipe(tester.createUnpauseStream())
-    .pipe(new RedisRowStream(opts))
+    .pipe(new RedisRowStream({}))
     .pipe(tester.createPauseStream())  
   setTimeout(function(){
     done()
-  }, 1500) //need some time here so that pipelines can empty and whatnot before moving on to other tests
+  }, 500) //need some time here so that pipelines can empty and whatnot before moving on to other tests
 }
 
-var simpleRowTest = function (done) {
+var stringRowTest = function (done) {
   // define the test data and output file
   var inFile = path.join('test', 'input', 'simpleData.json')
     , opts = { 
-        keyPrefix:"simpleRowTest"      //prefix to attach to all keys
-      , index:false  //if true, will index all results with reds.  Note that this can slow output somewhat.  see https://github.com/visionmedia/reds
-      , indexedFields:[] //if above is true, these fields will be indexed
+        keyPrefix: "stringRowTest"      //prefix to attach to all keys
       , serverAddress: "localhost"  //address of redis server
-      , serverPort:6379     //port of redis server
+      , serverPort: 6379     //port of redis server
       , redisOpts: {} 
       }
     , result = []
-
+    , expected = "{\"A label\":\"56\",\"B label\":\"78\",\"C label\":\"90\"}"
 
   var rc = redis.createClient(opts.serverPort, opts.serverAddress, opts.redisOpts)
 
@@ -85,26 +84,70 @@ var simpleRowTest = function (done) {
       fs.readFile(inFile, function (err, data) {
         should.not.exist(err)
         data = JSON.parse(data)
-        for(var i=0; i<data.length; i++){
-          testStream.write(data[i]);
-        }
+        for (var i=0; i<data.length; i++)
+          testStream.write(data[i])
 
         var check = function(){
           rc.keys(opts.keyPrefix+":*", function (err, replies) {
             should.not.exist(err)
-            //console.log('got ' + replies.length + ' replies')
             replies.length.should.eql(3)
             rc.get(opts.keyPrefix+":2", function(err, reply){
               should.not.exist(err)
-              reply.should.eql("{\"A label\":\"56\",\"B label\":\"78\",\"C label\":\"90\"}")
+              reply.should.eql(expected)
               done()
             })
           })
         }
-        setTimeout(check, 1500) //need some time here so that pipelines can empty and whatnot 
+        setTimeout(check, 500) //need some time here so that pipelines can empty and whatnot 
 
       })
     })
   })
  
 }
+
+var hashRowTest = function (done) {
+  // define the test data and output file
+  var inFile = path.join('test', 'input', 'simpleData.json')
+    , opts = { 
+        keyPrefix: "hashRowTest"    // prefix to attach to all keys
+      , structure: "hash"           // save into hash data type
+      , serverAddress: "localhost"  // address of redis server
+      , serverPort: 6379            // port of redis server
+      , redisOpts: {} 
+      }
+    , result = []
+    , expected = {"A label":"56","B label":"78","C label":"90"}
+
+  var rc = redis.createClient(opts.serverPort, opts.serverAddress, opts.redisOpts)
+
+  var testStream = new RedisRowStream(opts)
+
+  rc.on('ready', function(){
+    rc.flushall( function (err) { 
+      should.not.exist(err)
+      fs.readFile(inFile, function (err, data) {
+        should.not.exist(err)
+        data = JSON.parse(data)
+        for (var i=0; i<data.length; i++)
+          testStream.write(data[i])
+
+        var check = function(){
+          rc.keys(opts.keyPrefix+":*", function (err, replies) {
+            should.not.exist(err)
+            replies.length.should.eql(3)
+            rc.hgetall(opts.keyPrefix+":2", function(err, reply){
+              should.not.exist(err)
+              reply.should.eql(expected)
+              done()
+            })
+          })
+        }
+        setTimeout(check, 500) //need some time here so that pipelines can empty and whatnot 
+
+      })
+    })
+  })
+ 
+}
+

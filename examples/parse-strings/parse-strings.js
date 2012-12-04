@@ -14,25 +14,11 @@ var input = require('fs').createReadStream('./data.txt', {encoding: 'utf-8'})
   , opts = { 
       keyPrefix: "addData"
     , structure: "hash"
-    , index: true
-    , indexedFields: ["A label"]
     , verbose: true
     }
   , redisStream = new RedisRowStream(opts)
 
 // pipe data from input file to the regexStream parser to redis pubsub
-input.pipe(regexStream).pipe(redisStream)
-
-
-// test the index
-var search = reds.createSearch('search')
-search
-  .query(query = 'first')
-  .end(function(err, ids){
-    if (err) throw err
-    console.log('Search results for "%s":', query)
-    ids.forEach(function(id){
-      console.log('  - %s', strs[id])
-    })
-    process.exit();
-  })
+input
+  .pipe(regexStream)
+  .pipe(redisStream)

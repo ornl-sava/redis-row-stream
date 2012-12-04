@@ -10,15 +10,12 @@
 var Stream = require('stream').Stream
   , util = require('util')
   , redis = require('redis')
-  , reds = require('reds')
 
 module.exports = RedisRowStream
 
 //RedisRowStream constructor available options: 
 //  opts.structure      //redis data structure: either 'string' or 'hash'
 //  opts.keyPrefix      //all keys will be of the form keyPrefix:counter
-//  opts.index          //if true, will index all results with reds.  Note that this can slow output somewhat.  see https://github.com/visionmedia/reds
-//  opts.indexedFields  //if above is true, these fields will be indexed
 //  opts.serverAddress  //address of redis server
 //  opts.serverPort     //port of redis server
 //  opts.redisOpts      //see https://github.com/mranney/node_redis#rediscreateclientport-host-options for options.
@@ -42,12 +39,6 @@ function RedisRowStream(opts) {
 
   // show what is going on in the console
   this.verbose = opts.verbose || false
-  
-  // use [reds](https://github.com/visionmedia/reds) to index data
-  this.index = opts.index || false
-
-  // fields to index, if any
-  this.indexedFields = opts.indexedFields || []
 
   // data structure to store the data in: either 'string' (default) or 'hash'
   this.structure = opts.structure || "string"
@@ -95,20 +86,6 @@ RedisRowStream.prototype.write = function (record) {
     this.redisClient.set(key, JSON.stringify(record), function (err, res) {  })
   else if (this.structure === 'hash')
     this.redisClient.hmset(key, record, function (err, res) {  })
-
-  //console.log('index flag set ' + this.index + ', indexedFields: ' + util.inspect(this.indexedFields))
-  if (this.index) {
-    var search = reds.createSearch('search')
-    var field = ""
-    for (var i = 0; i < this.indexedFields.length; i++) {
-      field = this.indexedFields[i]
-      if (field && field !== "") {
-        if (this.verbose)
-          console.log('index> \'' + record[field] + '\' => ' + key)
-        search.index(record[field], key)
-      }
-    }
-  }
 
   this.eventID += 1
 

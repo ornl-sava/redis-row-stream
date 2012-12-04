@@ -16,8 +16,6 @@ The RedisRowStream constructor should be passed an opts object as its argument, 
     var opts = { 
           keyPrefix: "simpleRowTest"
         , structure: "hash"
-        , index: false
-        , indexedFields: []
         , serverAddress: "localhost" 
         , serverPort: 6379 
         , redisOpts: {} 
@@ -26,8 +24,6 @@ The RedisRowStream constructor should be passed an opts object as its argument, 
 `keyPrefix` is the prefix to use for all keys.  It will be followed by some index, as mentioned above, so in this case keys would be "simpleRowTest:0", "simpleRowTest:1", etc. If `keyPrefix` is left undefined, `'default'` will be used
 
 `structure` is the [Redis data type](http://redis.io/topics/data-types) to use. Valid options are `'string'` or `'hash'`. If `structure` is left undefined, `'string'` will be used.
-
-`index` is an optional boolean flag that indicates if any fields should be indexed (using [reds](https://github.com/visionmedia/reds)). The search namespace, used when creating the reds search is simply `search`. If `index` is set true, then all the fields listed in `indexedFields` will be indexed in this way. Note that adding fields to the index will somewhat slow performance.
 
 `serverAddress` is the address of Redis server (defaults to `'localhost'`), and `serverPort` is the port on which the Redis server is listening (defaults to `'6379'`).
 
@@ -45,11 +41,9 @@ This example (based on one of the test cases) reads in a json file with an array
 
     var inFile = path.join('test', 'input', 'simpleData.json')
       , opts = { 
-          keyPrefix:"simpleRowTest"
-        , index:false
-        , indexedFields:[]
+          keyPrefix: "simpleRowTest"
         , serverAddress: "localhost" 
-        , serverPort:6379 
+        , serverPort: 6379 
         , redisOpts: {} 
       }
 
@@ -63,33 +57,7 @@ This example (based on one of the test cases) reads in a json file with an array
       }
     })
 
-Rather than sending items with .write(), a more typical example may simply pipe several streams together, for example:
-
-    var RedisRowStream = require('redis-row-stream')
-      , RegexStream = require('regex-stream')
-
-    var input = require('fs').createReadStream('./data.txt', {encoding:'utf-8'})
-      , parser = {
-          "regex": "^([\\S]+) ([\\S]+) ([\\S]+)"
-        , "labels": ["A label", "B label", "C label"]
-        , "delimiter": "\r\n|\n"
-      }
-      , regexStream = new RegexStream(parser)
-
-    var opts = { keyPrefix:"simpleRowTest"
-        , index:false
-        , indexedFields:[]
-        , serverAddress: "localhost" 
-        , serverPort:6379 
-        , redisOpts: {} }
-
-    var redisStream = new RedisRowStream(opts)
-
-    // pipe data from input file to the regexStream parser to redis pubsub
-    input.pipe(regexStream)
-    regexStream.pipe(redisStream)
-
-This example will create a file stream, use the [regexStream](https://github.com/ornl-situ/regex-stream) instance to parse its items, and then pipe that output into Redis.
+Rather than sending items with .write(), a more typical example may simply pipe several streams together, for example: `input.pipe(regexStream).pipe(redisStream)`. See the full example in the `examples` directory. The `parse-strings` example will create a file stream, use the [regexStream](https://github.com/ornl-situ/regex-stream) instance to parse its items, and then pipe that output into Redis.
 
 See the test cases for some usage examples.
 
