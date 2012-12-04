@@ -4,11 +4,9 @@
 ehthumbs.db
 Icon?
 Thumbs.db
-# Node files #
+# Redis #
 ##############
-examples/output
-test/output
-docs
+dump.rdb
 # Jekyll #
 ##########
 _site
