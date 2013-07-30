@@ -28,8 +28,8 @@
     , "0.0.2": "2012-12-03T21:00:00.000Z"
     }
   , "scripts" : {
-      "test": "./node_modules/mocha/bin/mocha -R spec --slow 2500 --timeout 5000"
-    , "watch": "./node_modules/mocha/bin/mocha -R min --slow 2500 --timeout 5000 --watch"
+      "test": "./node_modules/mocha/bin/mocha -R spec --slow 4000 --timeout 10000"
+    , "watch": "./node_modules/mocha/bin/mocha -R min --slow 4000 --timeout 10000 --watch"
   }
   , "main": "./redis-row-stream.js"
   , "dependencies": {
