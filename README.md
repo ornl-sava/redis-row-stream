@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/ornl-situ/redis-row-stream.png?branch=master)](https://travis-ci.org/ornl-situ/redis-row-stream)
+[![Build Status](https://travis-ci.org/ornl-sava/redis-row-stream.png?branch=master)](https://travis-ci.org/ornl-sava/redis-row-stream)
 
 
 # Send a stream of items to Redis
